@@ -45,7 +45,7 @@ public static class ImportOrdering
 		{
 			if (row.Warehouse == null)
 			{
-				plan.Problems.Add(row.Name + L.T("：没有仓库的配送线给工厂送，先在物流经理里加上", ": no warehouse route delivers this to the factory. Add it in a logistics manager plan first"));
+				plan.Problems.Add(row.Name + L.T("：没有仓库的配送线给工厂送，先在物流经理里加上", ": no warehouse route supplies this material to the factory. Add it to a logistics manager plan."));
 				continue;
 			}
 			// 自家工厂供货、只有批发合同的不改
@@ -103,16 +103,16 @@ public static class ImportOrdering
 				{
 					var others = contract.products.Where(p => p.amount > 0 && p.itemName != row.Item)
 						.Select(p => GameData.Localize(p.itemName) + " " + GameData.N(p.amount)).ToList();
-					plan.Activations.Add(L.F("「{0}」的合同现在是暂停的，会被启用，下周一开始送货", "The contract with \"{0}\" is paused and will be activated, deliveries start next Monday", GameData.BusinessName(contract.importAddress))
-						+ (others.Count > 0 ? L.F("（合同里的 {0} 也会一起送）", " (its {0} will be delivered too)", string.Join(L.Sep, others)) : ""));
+					plan.Activations.Add(L.F("「{0}」的合同现在是暂停的，会被启用，下周一开始送货", "The contract with \"{0}\" is paused. The mod will start it. The first delivery is next Monday.", GameData.BusinessName(contract.importAddress))
+						+ (others.Count > 0 ? L.F("（合同里的 {0} 也会一起送）", " This contract also delivers {0}.", string.Join(L.Sep, others)) : ""));
 				}
 			}
 			if (delta > 0)
 			{
-				plan.Problems.Add(row.WarehouseName + " · " + row.Name + L.T("：还差每周 ", ": still short ") + GameData.N(delta) + L.T("", " per week")
+				plan.Problems.Add(row.WarehouseName + " · " + row.Name + L.T("：还差每周 ", ": weekly shortage is ") + GameData.N(delta) + L.T("", "")
 					+ (existing.Count > 0 || plan.Changes.Any(c => c.Row == row)
-						? L.T("，进口商每周卖到上限了，需要再和一家卖这种货的进口商建立合作", ". The importer's weekly limit is reached; partner with another importer that sells it")
-						: L.T("，没有能进这种货的采购合同。先打电话给卖这种货的进口商建立合作（总部需要一名空闲的采购员）", ". No purchasing contract can buy this. Call an importer that sells it to start a partnership first (needs a free purchasing agent at HQ)")));
+						? L.T("，进口商每周卖到上限了，需要再和一家卖这种货的进口商建立合作", ". The importer is at its weekly limit. Make a partnership with one more importer that sells this item.")
+						: L.T("，没有能进这种货的采购合同。先打电话给卖这种货的进口商建立合作（总部需要一名空闲的采购员）", ". No purchasing contract can buy this item. Call an importer that sells it and make a partnership. You need a free purchasing agent at your headquarters.")));
 			}
 		}
 		return plan;
@@ -135,7 +135,7 @@ public static class ImportOrdering
 		}
 		SaveGameManager.MarkChange();
 		TerminalMod.Log("Adjusted imports: " + done + " changes");
-		return L.F("已调整 {0} 项每周进货，下周一按新数量送货", "Changed {0} weekly import amounts, new amounts arrive next Monday", done);
+		return L.F("已调整 {0} 项每周进货，下周一按新数量送货", "{0} weekly import amounts changed. The new amounts arrive next Monday.", done);
 	}
 
 	private static void ApplyChange(ImportChange change)
@@ -260,6 +260,6 @@ public static class StoreRestock
 		SaveGameManager.MarkChange();
 		int stores = changes.Select(c => c.Store).Distinct().Count();
 		TerminalMod.Log("Applied suggested restock targets: " + stores + " stores, " + changes.Count + " items");
-		return L.F("已改 {0} 家店、{1} 项补货目标，今晚凌晨 2 点按新目标补货", "Changed {1} restock targets in {0} stores, applied at the 2:00 delivery", stores, changes.Count);
+		return L.F("已改 {0} 家店、{1} 项补货目标，今晚凌晨 2 点按新目标补货", "{1} restock targets changed in {0} stores. The 2:00 delivery uses the new targets.", stores, changes.Count);
 	}
 }

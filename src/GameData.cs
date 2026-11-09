@@ -345,15 +345,15 @@ public sealed class TerminalData
 				var products = contract.products.Where(p => p.amount > 0 && p.assignedWarehouse == address).ToList();
 				if (products.Count == 0) continue;
 				string schedule;
-				if (!contract.isActive) schedule = L.T("合同已暂停，不会送货", "Contract paused, no deliveries");
-				else if (contract.isRepeatingOrder) schedule = L.F("每周一 8 点送货 · 下次第 {0} 天", "Delivered Mondays 8:00 · next on day {0}", contract.nextDeliveryDay);
-				else schedule = L.F("一次性订单 · 第 {0} 天送到", "One-time order · arrives day {0}", contract.nextDeliveryDay);
+				if (!contract.isActive) schedule = L.T("合同已暂停，不会送货", "The contract is paused. No deliveries.");
+				else if (contract.isRepeatingOrder) schedule = L.F("每周一 8 点送货 · 下次第 {0} 天", "Delivery on Monday at 8:00 · next delivery on day {0}", contract.nextDeliveryDay);
+				else schedule = L.F("一次性订单 · 第 {0} 天送到", "One-time order · delivery on day {0}", contract.nextDeliveryDay);
 				var card = new SourceCard
 				{
 					Kind = L.T("码头进口", "Import"),
 					Title = GameData.BusinessName(contract.importAddress),
 					Schedule = schedule,
-					Unit = contract.isTarget ? L.T("每周补货到", "Weekly fill-up to") : L.T("每周进货量", "Per week"),
+					Unit = contract.isTarget ? L.T("每周补货到", "Fill to (weekly)") : L.T("每周进货量", "Per week"),
 				};
 				foreach (var product in products) card.Items.Add(new KeyValuePair<string, int>(GameData.Localize(product.itemName), product.amount));
 				place.Sources.Add(card);
@@ -369,7 +369,7 @@ public sealed class TerminalData
 				{
 					Kind = L.T("批发进货", "Wholesale"),
 					Title = GameData.BusinessName(contract.wholesaleAddress),
-					Schedule = !contract.enabled ? L.T("合同已暂停，不会送货", "Contract paused, no deliveries") : contract.repeatingOrder ? L.F("每周一送货 · 下次第 {0} 天", "Delivered Mondays · next on day {0}", contract.nextDeliveryDay) : L.F("一次性订单 · 第 {0} 天送到", "One-time order · arrives day {0}", contract.nextDeliveryDay),
+					Schedule = !contract.enabled ? L.T("合同已暂停，不会送货", "The contract is paused. No deliveries.") : contract.repeatingOrder ? L.F("每周一送货 · 下次第 {0} 天", "Delivery on Monday · next delivery on day {0}", contract.nextDeliveryDay) : L.F("一次性订单 · 第 {0} 天送到", "One-time order · delivery on day {0}", contract.nextDeliveryDay),
 					Unit = L.T("每周进货量", "Per week"),
 				};
 				foreach (var item in wholesaleItems) card.Items.Add(new KeyValuePair<string, int>(GameData.Localize(item.itemName), item.amount));
@@ -389,7 +389,7 @@ public sealed class TerminalData
 						Kind = L.T("物流转入", "Transfer in"),
 						IsTransfer = true,
 						Title = GameData.BusinessName(plan.targetAddress) + L.T(" → 本仓库", " → this warehouse"),
-						Schedule = string.IsNullOrEmpty(plan.assignedEmployeeId) ? L.T("这条配送线没有物流经理，不会送货", "No logistics manager on this route, nothing is delivered") : L.T("物流经理每天凌晨 2 点送", "Logistics manager delivers daily at 2:00"),
+						Schedule = string.IsNullOrEmpty(plan.assignedEmployeeId) ? L.T("这条配送线没有物流经理，不会送货", "This route has no logistics manager. No deliveries.") : L.T("物流经理每天凌晨 2 点送", "The logistics manager delivers at 2:00 every day"),
 						Unit = L.T("近 7 天转入", "Last 7 days"),
 					};
 					foreach (var target in destination.stockTargets.Where(t => t.targetAmount > 0))
@@ -546,7 +546,7 @@ public sealed class TerminalData
 			if (row.Warehouse == null)
 			{
 				row.Kind = SupplyKind.None;
-				row.SupplyNote = L.T("没有仓库的配送线给工厂送这种原料，先在物流经理里加上", "No warehouse route delivers this to the factory. Add it in a logistics manager plan first");
+				row.SupplyNote = L.T("没有仓库的配送线给工厂送这种原料，先在物流经理里加上", "No warehouse route supplies this material to the factory. Add it to a logistics manager plan.");
 				row.Supplied = 0;
 				return;
 			}
@@ -561,7 +561,7 @@ public sealed class TerminalData
 				string names = string.Join(L.Sep, repeating.Select(x => GameData.BusinessName(x.contract.importAddress)).Distinct());
 				if (wholesale > 0) names = (names.Length > 0 ? names + " + " : "") + L.T("批发 ", "wholesale ") + GameData.N(wholesale);
 				bool target = repeating.Any(x => x.contract.isTarget);
-				row.SupplyNote = names + (target ? L.T(" · 每周补货到这个量", " · weekly fill-up") : "") + (row.Need == 0 ? L.T(" · 没有去处", " · nothing uses it") : row.Diff < 0 ? L.T(" · 每周少 ", " · short by ") + GameData.N(-row.Diff) : "");
+				row.SupplyNote = names + (target ? L.T(" · 每周补货到这个量", " · fills to this amount each week") : "") + (row.Need == 0 ? L.T(" · 没有去处", " · no building uses it") : row.Diff < 0 ? L.T(" · 每周少 ", " · weekly shortage: ") + GameData.N(-row.Diff) : "");
 				return;
 			}
 			if (_producedByOwnFactories.Contains(row.Item))
@@ -569,13 +569,13 @@ public sealed class TerminalData
 				row.Kind = SupplyKind.Internal;
 				var warehouse = _data.Warehouses.FirstOrDefault(w => w.Registration == row.Warehouse);
 				row.Supplied = warehouse?.Stock.FirstOrDefault(s => s.Item == row.Item)?.In7 ?? 0;
-				row.SupplyNote = L.F("自家工厂生产，近 7 天转入 {0}，不用下单", "Made by your factory, {0} transferred in last 7 days, no order needed", GameData.N(row.Supplied));
+				row.SupplyNote = L.F("自家工厂生产，近 7 天转入 {0}，不用下单", "Your factory makes this item. {0} came in during the last 7 days. No order is necessary.", GameData.N(row.Supplied));
 				return;
 			}
 			row.Kind = SupplyKind.None;
 			row.SupplyNote = imports.Count > 0
-				? L.T("只有一次性订单，没有每周进货", "Only one-time orders, no weekly supply")
-				: L.F("{0}没有这种货的每周进货", "{0} has no weekly supply of this", row.WarehouseName);
+				? L.T("只有一次性订单，没有每周进货", "Only one-time orders. No weekly supply.")
+				: L.F("{0}没有这种货的每周进货", "{0} has no weekly supply of this item.", row.WarehouseName);
 		}
 
 		private void BuildTotals()

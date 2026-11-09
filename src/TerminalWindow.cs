@@ -273,7 +273,7 @@ public class TerminalWindow : MonoBehaviour
 		GUILayout.FlexibleSpace();
 		if (_data != null)
 		{
-			GUILayout.Label(L.F("第 {0} 天 · 每 {1} 秒自动刷新 · 「近 7 天」= 第 {2}–{0} 天", "Day {0} · auto-refresh every {1}s · \"last 7 days\" = days {2}–{0}", _data.Day, AutoRefreshSeconds, _data.Day - 6), _mutedRight);
+			GUILayout.Label(L.F("第 {0} 天 · 每 {1} 秒自动刷新 · 「近 7 天」= 第 {2}–{0} 天", "Day {0} · refresh every {1} s · last 7 days = days {2}–{0}", _data.Day, AutoRefreshSeconds, _data.Day - 6), _mutedRight);
 		}
 		GUILayout.Space(12f * _s);
 		if (GUILayout.Button(L.T("刷新", "Refresh"), _plainButton, W(90))) Defer(Refresh);
@@ -302,7 +302,7 @@ public class TerminalWindow : MonoBehaviour
 		GUILayout.Label(label, _header);
 		if (names.Count == 0)
 		{
-			GUILayout.Label(view == View.Store ? L.T("仓库配送线里还没有商店", "No store is on a warehouse route yet") : L.T("还没有", "None yet"), _muted);
+			GUILayout.Label(view == View.Store ? L.T("仓库配送线里还没有商店", "No warehouse route supplies a store") : L.T("还没有", "None yet"), _muted);
 			return;
 		}
 		for (int i = 0; i < names.Count; i++)
@@ -378,12 +378,12 @@ public class TerminalWindow : MonoBehaviour
 	{
 		var changes = StoreRestock.Plan(_data.Stores);
 		GUILayout.BeginHorizontal();
-		GUILayout.Label(changes.Count > 0 ? L.F("{0} 项补货目标和建议不一样", "{0} restock targets differ from the suggestion", changes.Count) : L.T("所有补货目标都和建议一样", "All restock targets match the suggestion"), changes.Count > 0 ? _warn : _good, GUILayout.ExpandWidth(false));
+		GUILayout.Label(changes.Count > 0 ? L.F("{0} 项补货目标和建议不一样", "{0} restock targets are different from the suggestion", changes.Count) : L.T("所有补货目标都和建议一样", "All restock targets match the suggestion"), changes.Count > 0 ? _warn : _good, GUILayout.ExpandWidth(false));
 		GUILayout.Space(12f * _s);
 		if (changes.Count > 0 && GUILayout.Button(L.T("全部按建议改", "Apply all suggestions"), _blueButton)) Defer(() => ConfirmRestock(changes));
 		GUILayout.FlexibleSpace();
 		GUILayout.EndHorizontal();
-		GUILayout.Label(L.T("建议补货目标 = 近 7 天单日最多卖 × 2（多备一天，哪天送货员没来也不断货）。近 7 天没卖出的商品不改。", "Suggested target = best single day of the last 7 days × 2 (one spare day, so a missed delivery does not empty the shelf). Items with no sales in 7 days are left alone."), _muted);
+		GUILayout.Label(L.T("建议补货目标 = 近 7 天单日最多卖 × 2（多备一天，哪天送货员没来也不断货）。近 7 天没卖出的商品不改。", "Suggested target = best day of the last 7 days × 2. The extra day prevents an empty shelf if one delivery does not come. The mod does not change items with no sales in 7 days."), _muted);
 		Row(new Cell(L.T("商店", "Store"), _header, 230), new Cell(L.T("商品", "Item"), _header, 0), new Cell(L.T("每天平均卖", "Avg / day"), _headerRight, 110), new Cell(L.T("单日最多卖", "Best day"), _headerRight, 110),
 			new Cell(L.T("现在的目标", "Current"), _headerRight, 120), new Cell(L.T("建议目标", "Suggested"), _headerRight, 120), new Cell(L.T("判断", "Verdict"), _headerRight, 230));
 		BeginScroll();
@@ -444,7 +444,7 @@ public class TerminalWindow : MonoBehaviour
 			Line();
 		}
 		EndScroll();
-		GUILayout.Label(L.F("运进包括码头进口和转入，运出包括送工厂和送商店。「还够用多久」= 现有库存 ÷ 每天运出，{0} 天以内标红。仓库没有机器，不消耗货物。", "In = imports and transfers; out = deliveries to factories and stores. \"Lasts\" = stock ÷ daily out, red at {0} days or less. Warehouses have no machines and consume nothing.", LowStockDays), _muted);
+		GUILayout.Label(L.F("运进包括码头进口和转入，运出包括送工厂和送商店。「还够用多久」= 现有库存 ÷ 每天运出，{0} 天以内标红。仓库没有机器，不消耗货物。", "In = imports and transfers. Out = deliveries to factories and stores. Lasts = stock ÷ out per day. Red shows {0} days or less. Warehouses have no machines. They do not use goods.", LowStockDays), _muted);
 	}
 
 	private static float DaysLeftKey(StockLine line)
@@ -464,7 +464,7 @@ public class TerminalWindow : MonoBehaviour
 		}
 		else if (daily <= 0f)
 		{
-			status = L.T("没有运出", "Not shipped");
+			status = L.T("没有运出", "No deliveries out");
 			style = _mutedRight;
 		}
 		else
@@ -520,7 +520,7 @@ public class TerminalWindow : MonoBehaviour
 		}
 		EndScroll();
 		GUILayout.Label(L.T("每周剩余 / 缺 = 每周进货 − 工厂每周需要（按机器用料）− 商铺近 7 天销量。先保证工厂开工，剩下的再给商铺。每周进货：码头进口按合同数量，别处转入按近 7 天转入量。",
-			"Weekly ± = weekly supply − factory weekly need (from machine recipes) − store sales of the last 7 days. Factories are served first, stores get the rest. Weekly supply: contract amounts for imports, last 7 days for transfers."), _muted);
+			"Weekly ± = supply − factory need − store sales. The factory need comes from the machine recipes. The store sales are for the last 7 days. Factories get goods first. Stores get the remainder. Import supply is the contract amount. Transfer supply is the amount of the last 7 days."), _muted);
 	}
 
 	private static string Describe(List<KeyValuePair<string, int>> list)
@@ -538,7 +538,7 @@ public class TerminalWindow : MonoBehaviour
 
 		int? produced = place.HasLedger ? place.Yesterday.Sum(y => y.Produced ?? 0) : (int?)null;
 		GUILayout.BeginHorizontal();
-		Tile(L.T("昨天生产", "Made yesterday"), produced.HasValue ? N(produced.Value) : L.T("等记账", "Pending"));
+		Tile(L.T("昨天生产", "Made yesterday"), produced.HasValue ? N(produced.Value) : L.T("等记账", "No data yet"));
 		Tile(L.T("给自家供货", "To your buildings"), N(place.Yesterday.Sum(y => y.Own)));
 		Tile(L.T("出口", "Exported"), N(place.Yesterday.Sum(y => y.Exported)));
 		Tile(L.T("出口收入", "Export revenue"), Money(place.Yesterday.Sum(y => y.Revenue)));
@@ -555,13 +555,13 @@ public class TerminalWindow : MonoBehaviour
 		foreach (var y in place.Yesterday)
 		{
 			string left = y.Produced.HasValue ? N(Math.Max(0, y.Produced.Value - y.Own - y.Exported)) : "—";
-			Row(new Cell(y.Name, _cell, 0), new Cell(y.Produced.HasValue ? N(y.Produced.Value) : L.T("等记账", "Pending"), _cellRightBold, 130), new Cell(N(y.Own), _cellRight, 140),
+			Row(new Cell(y.Name, _cell, 0), new Cell(y.Produced.HasValue ? N(y.Produced.Value) : L.T("等记账", "No data yet"), _cellRightBold, 130), new Cell(N(y.Own), _cellRight, 140),
 				new Cell(Nz(y.Exported), _cellRight, 120), new Cell(Money(y.Revenue), _goodRight, 150), new Cell(left, _cellRight, 130));
 			Line();
 		}
 		GUILayout.Label(place.HasLedger
-			? L.T("出口收入 = 出口数量 × 当天出口单价。生产量由 mod 每天 0 点给库存拍快照算出来。", "Revenue = exported amount × that day's export price. Output is worked out by the mod from a stock snapshot taken every midnight.")
-			: L.T("「昨天生产」游戏不记录，由 mod 每天 0 点给库存拍快照算出来：装好 mod 后过两次午夜才有数。出口和给自家供货来自游戏记录，现在就准。", "The game does not record factory output. The mod snapshots stock every midnight, so \"Made\" appears after two midnights with the mod installed. Exports and deliveries come from game records and are exact now."), _muted);
+			? L.T("出口收入 = 出口数量 × 当天出口单价。生产量由 mod 每天 0 点给库存拍快照算出来。", "Revenue = exported amount × export price of that day. The mod calculates the output from a stock record at midnight.")
+			: L.T("「昨天生产」游戏不记录，由 mod 每天 0 点给库存拍快照算出来：装好 mod 后过两次午夜才有数。出口和给自家供货来自游戏记录，现在就准。", "The game does not record factory output. The mod records the stock every day at midnight. \"Made\" shows after two midnights. Exports and deliveries come from game records. These values are correct now."), _muted);
 		GUILayout.Space(14f * _s);
 
 		var mine = place.WeeklyNeed
@@ -586,7 +586,7 @@ public class TerminalWindow : MonoBehaviour
 			GUILayout.EndHorizontal();
 			Line();
 		}
-		GUILayout.Label(L.T("原料先进仓库，物流经理每天凌晨 2 点从仓库送到工厂。在这里点下单，就是给供货仓库下码头进口单，数量按仓库每周共需要。", "Raw materials are imported into a warehouse first; the logistics manager moves them to the factory at 2:00 every day. Ordering here places an import order for the supplying warehouse, sized to that warehouse's total weekly need."), _muted);
+		GUILayout.Label(L.T("原料先进仓库，物流经理每天凌晨 2 点从仓库送到工厂。在这里点下单，就是给供货仓库下码头进口单，数量按仓库每周共需要。", "Raw materials go to a warehouse first. The logistics manager moves them to the factory at 2:00 every day. Order puts an import order on the supplying warehouse. The amount is the total weekly need of that warehouse."), _muted);
 		EndScroll();
 	}
 
@@ -596,7 +596,7 @@ public class TerminalWindow : MonoBehaviour
 		GUILayout.Label(L.T("机器", "Machines"), _h2);
 		if (place.Machines.Count == 0)
 		{
-			GUILayout.Label(L.T("没有选了配方的机器。", "No machine has a recipe selected."), _muted);
+			GUILayout.Label(L.T("没有选了配方的机器。", "No machine has a recipe."), _muted);
 			return;
 		}
 		const float nameW = 170f, dayW = 120f, weekW = 130f, gap = 36f;
@@ -605,7 +605,7 @@ public class TerminalWindow : MonoBehaviour
 		foreach (var m in place.Machines)
 		{
 			string schedule = m.WeeklyHours == 0
-				? L.F("{0} 台 · 没有排班", "{0} × · no shifts scheduled", m.Count)
+				? L.F("{0} 台 · 没有排班", "{0} × · no shifts", m.Count)
 				: L.F("{0} 台 × 每天{1}{2} 小时 · 每周 {3} 天", "{0} × {1}{2} h/day · {3} days/week", m.Count, m.SameHoursEveryDay ? (L.Chinese ? " " : "") : (L.Chinese ? "约 " : "~"), Hours(m.HoursPerDay), m.WorkDays);
 			string output = m.WorkDays == 0 ? "0" : N(m.WeeklyOutput / m.WorkDays);
 			GUILayout.BeginVertical(_card);
@@ -650,14 +650,14 @@ public class TerminalWindow : MonoBehaviour
 		GUILayout.BeginHorizontal();
 		DrawOrderSummary(rows);
 		GUILayout.Space(16f * _s);
-		if (rows.Count > 0 && GUILayout.Button(L.T("一键按需要调整每周进货", "Match weekly imports to need"), _blueButton)) Defer(() => ConfirmImports(rows, false, scope + L.T("：按需要调整每周进货？", ": set weekly imports to the weekly need?")));
+		if (rows.Count > 0 && GUILayout.Button(L.T("一键按需要调整每周进货", "Match weekly imports to need"), _blueButton)) Defer(() => ConfirmImports(rows, false, scope + L.T("：按需要调整每周进货？", ": change the weekly imports to the weekly need?")));
 		GUILayout.FlexibleSpace();
 		GUILayout.EndHorizontal();
-		GUILayout.Label(L.T("每周需要 = 送工厂的原料（按机器用料）+ 送自家商铺的货（按近 7 天销量）。原料先进仓库，再由物流经理每天凌晨 2 点送到工厂。", "Weekly need = raw materials for factories (from machine recipes) + goods for your stores (last 7 days of sales). Raw materials go into a warehouse first and are moved to factories at 2:00 daily."), _muted);
+		GUILayout.Label(L.T("每周需要 = 送工厂的原料（按机器用料）+ 送自家商铺的货（按近 7 天销量）。原料先进仓库，再由物流经理每天凌晨 2 点送到工厂。", "Weekly need = raw materials for factories + goods for your stores. The raw materials come from the machine recipes. The store goods come from the last 7 days of sales. Raw materials go to a warehouse first. The logistics manager moves them to the factories at 2:00 every day."), _muted);
 		float[] w = Widths(240, 0, 110, 110, 110, 420);
 		HeaderRow(w, (L.T("货物", "Goods"), _header), (L.T("送到哪里（每周）", "Goes to (per week)"), _header), (L.T("每周需要", "Need"), _headerRight), (L.T("每周进货", "Supply"), _headerRight), (L.T("剩余 / 缺", "±"), _headerRight), (L.T("进货", "Order"), _header));
 		BeginScroll();
-		if (rows.Count == 0) GUILayout.Label(L.T("这里没有需要进货的货物。", "Nothing here needs supplying."), _muted);
+		if (rows.Count == 0) GUILayout.Label(L.T("这里没有需要进货的货物。", "No item here needs supply."), _muted);
 		foreach (var group in rows.GroupBy(r => r.WarehouseName))
 		{
 			var first = group.First();
@@ -685,7 +685,7 @@ public class TerminalWindow : MonoBehaviour
 			}
 		}
 		EndScroll();
-		GUILayout.Label(L.T("粗体是工厂原料。剩余 / 缺 = 每周进货 − 每周需要。一键调整会把码头进口的每周数量改成每周需要（多的减、少的补，取整到 10），批发合同和自家工厂供货的不动。", "Bold = factory raw materials. ± = weekly supply − weekly need. The one-click button sets weekly import amounts to the weekly need (up or down, rounded up to 10); wholesale contracts and your own factory output are left alone."), _muted);
+		GUILayout.Label(L.T("粗体是工厂原料。剩余 / 缺 = 每周进货 − 每周需要。一键调整会把码头进口的每周数量改成每周需要（多的减、少的补，取整到 10），批发合同和自家工厂供货的不动。", "Bold items are factory raw materials. ± = weekly supply − weekly need. The one-click button sets each weekly import amount to the weekly need. It increases or decreases the amount and rounds it up to 10. It does not change wholesale contracts or the output of your factories."), _muted);
 	}
 
 	private void DrawOrderSummary(IEnumerable<SupplyRow> rows)
@@ -694,7 +694,7 @@ public class TerminalWindow : MonoBehaviour
 		int missing = list.Count(r => r.Kind == SupplyKind.None && r.Need > 0);
 		int short_ = list.Count(r => (r.Kind == SupplyKind.Import || r.Kind == SupplyKind.Wholesale) && r.Diff < 0);
 		string text = missing > 0 ? L.F("还有 {0} 种没下单", "{0} not ordered", missing) : L.T("全部已下单", "All ordered");
-		if (short_ > 0) text += L.F(" · {0} 种每周不够", " · {0} short each week", short_);
+		if (short_ > 0) text += L.F(" · {0} 种每周不够", " · {0} with a weekly shortage", short_);
 		GUILayout.Label(text, missing + short_ > 0 ? _warn : _good, GUILayout.ExpandWidth(false));
 	}
 
@@ -706,7 +706,7 @@ public class TerminalWindow : MonoBehaviour
 		{
 			case SupplyKind.Import:
 				GUILayout.Label(L.T("已下单", "Ordered"), _badgeGood, GUILayout.ExpandWidth(false));
-				if (row.Diff < 0 && GUILayout.Button(L.T("加量", "Top up"), _redButton, GUILayout.ExpandWidth(false))) Defer(() => ConfirmImports(new[] { row }, true, row.Name + L.T("：加量？", ": top up?")));
+				if (row.Diff < 0 && GUILayout.Button(L.T("加量", "Increase"), _redButton, GUILayout.ExpandWidth(false))) Defer(() => ConfirmImports(new[] { row }, true, row.Name + L.T("：加量？", ": increase the amount?")));
 				break;
 			case SupplyKind.Wholesale:
 				GUILayout.Label(L.T("批发进货", "Wholesale"), _badgeGood, GUILayout.ExpandWidth(false));
@@ -728,9 +728,9 @@ public class TerminalWindow : MonoBehaviour
 	{
 		var plan = ImportOrdering.Plan(rows, onlyIncrease);
 		var lines = plan.Changes.Select(c => c.Row.WarehouseName + " · " + c.Row.Name + L.T("：每周 ", ": per week ") + N(c.OldAmount) + " → " + N(c.NewAmount)
-			+ L.T("（", " (") + c.ImporterName + (c.OldAmount == 0 ? L.T("，新加", ", new") : "") + L.T("）", ")")).ToList();
+			+ L.T("（", " (") + c.ImporterName + (c.OldAmount == 0 ? L.T("，新加", ", new item") : "") + L.T("）", ")")).ToList();
 		lines.AddRange(plan.Activations);
-		if (plan.Changes.Count == 0 && plan.Problems.Count == 0) lines.Add(L.T("每周进货已经和需要一样，不用改。", "Weekly supply already matches the need, nothing to change."));
+		if (plan.Changes.Count == 0 && plan.Problems.Count == 0) lines.Add(L.T("每周进货已经和需要一样，不用改。", "The weekly supply is equal to the need. No change is necessary."));
 		OpenConfirm(title, lines, plan.Problems, plan.Changes.Count > 0 ? L.T("确认下单", "Confirm order") : null, () => ImportOrdering.Apply(plan));
 	}
 
@@ -741,7 +741,7 @@ public class TerminalWindow : MonoBehaviour
 		GUILayout.Label(L.T("[商店] ", "[Store] ") + store.Name + " · " + store.AddressText, _h1);
 		var changes = StoreRestock.Plan(new[] { store });
 		GUILayout.BeginHorizontal();
-		GUILayout.Label(L.F("由 {0} 供货 · 销量为近 7 天每天实际卖出", "Supplied by {0} · sales are actual daily sales of the last 7 days", store.Supplier), _muted, GUILayout.ExpandWidth(false));
+		GUILayout.Label(L.F("由 {0} 供货 · 销量为近 7 天每天实际卖出", "Supplier: {0} · sales are the real daily sales of the last 7 days", store.Supplier), _muted, GUILayout.ExpandWidth(false));
 		GUILayout.Space(16f * _s);
 		if (changes.Count > 0 && GUILayout.Button(L.T("这家店按建议改", "Apply suggestions for this store"), _blueButton)) Defer(() => ConfirmRestock(changes));
 		GUILayout.FlexibleSpace();
@@ -749,7 +749,7 @@ public class TerminalWindow : MonoBehaviour
 		Row(new Cell(L.T("商品", "Item"), _header, 0), new Cell(L.T("店内库存", "In store"), _headerRight, 110), new Cell(L.T("每天平均卖", "Avg / day"), _headerRight, 110), new Cell(L.T("单日最多卖", "Best day"), _headerRight, 110),
 			new Cell(L.T("现在的补货目标", "Current target"), _headerRight, 150), new Cell(L.T("建议补货目标", "Suggested"), _headerRight, 140), new Cell(L.T("今晚会送", "Tonight"), _headerRight, 100), new Cell(L.T("判断", "Verdict"), _headerRight, 230));
 		BeginScroll();
-		if (store.Lines.Count == 0) GUILayout.Label(L.T("配送线里没有给这家店设补货目标。", "No delivery route sets restock targets for this store."), _muted);
+		if (store.Lines.Count == 0) GUILayout.Label(L.T("配送线里没有给这家店设补货目标。", "No delivery route has restock targets for this store."), _muted);
 		foreach (var line in store.Lines)
 		{
 			Verdict(line, out string verdict, out GUIStyle style);
@@ -758,7 +758,7 @@ public class TerminalWindow : MonoBehaviour
 			Line();
 		}
 		EndScroll();
-		GUILayout.Label(L.T("物流经理每天凌晨 2 点把店里补到「补货目标」，所以今晚会送 = 补货目标 − 店内库存。建议补货目标 = 近 7 天单日最多卖的量 × 2，多备一天：哪天送货员没来、没补上货，店里也够卖到下一次补货。", "The logistics manager fills the store up to its target at 2:00 every day, so tonight = target − in store. Suggested target = best single day of the last 7 days × 2: one spare day, so a missed delivery does not empty the shelf."), _muted);
+		GUILayout.Label(L.T("物流经理每天凌晨 2 点把店里补到「补货目标」，所以今晚会送 = 补货目标 − 店内库存。建议补货目标 = 近 7 天单日最多卖的量 × 2，多备一天：哪天送货员没来、没补上货，店里也够卖到下一次补货。", "The logistics manager fills the store to its target at 2:00 every day. Tonight = target − in store. Suggested target = best day of the last 7 days × 2. The extra day prevents an empty shelf if one delivery does not come."), _muted);
 	}
 
 	private void Verdict(StoreLine line, out string verdict, out GUIStyle style)
@@ -770,17 +770,17 @@ public class TerminalWindow : MonoBehaviour
 		}
 		else if (line.Target < line.Peak)
 		{
-			verdict = L.T("目标太低，每天都会断货", "Too low, sells out daily");
+			verdict = L.T("目标太低，每天都会断货", "Too low. Sells out every day.");
 			style = _warnRight;
 		}
 		else if (line.Target < line.Suggest)
 		{
-			verdict = L.T("漏送一天就会断货", "One missed delivery = empty");
+			verdict = L.T("漏送一天就会断货", "Empty after one missed delivery");
 			style = _orangeRight;
 		}
 		else if (line.Target > line.Suggest * 1.5f)
 		{
-			verdict = L.T("目标偏高，压货", "Too high, overstocked");
+			verdict = L.T("目标偏高，压货", "Too high. Too much stock.");
 			style = _orangeRight;
 		}
 		else
