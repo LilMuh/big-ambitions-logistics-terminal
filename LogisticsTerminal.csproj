@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>LogisticsTerminal</AssemblyName>
+    <RootNamespace>LogisticsTerminal</RootNamespace>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>11.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <Version>0.1.0</Version>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <DebugType>portable</DebugType>
+
+    <!-- 游戏安装目录，可用 -p:GameDir=... 覆盖 -->
+    <GameDir Condition="'$(GameDir)' == ''">D:\Game\Steam\steamapps\common\Big Ambitions</GameDir>
+    <ManagedDir>$(GameDir)\Big Ambitions_Data\Managed</ManagedDir>
+    <!-- 本地测试用的 mod 目录 -->
+    <ModsLocalDir>$(USERPROFILE)\AppData\LocalLow\Hovgaard Games\Big Ambitions\ModsLocal\LogisticsTerminal</ModsLocalDir>
+  </PropertyGroup>
+
+  <!-- 游戏程序集只作为编译引用，不随 mod 发布（系统库由 SDK 提供） -->
+  <ItemGroup>
+    <Reference Include="$(ManagedDir)\*.dll" Exclude="$(ManagedDir)\mscorlib.dll;$(ManagedDir)\netstandard.dll;$(ManagedDir)\System*.dll;$(ManagedDir)\Microsoft*.dll;$(ManagedDir)\Mono*.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- 编译后自动复制到 ModsLocal，方便直接进游戏测试 -->
+  <Target Name="DeployToModsLocal" AfterTargets="Build">
+    <MakeDir Directories="$(ModsLocalDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsLocalDir)" />
+    <Message Importance="high" Text="已部署到 $(ModsLocalDir)" />
+  </Target>
+
+</Project>
